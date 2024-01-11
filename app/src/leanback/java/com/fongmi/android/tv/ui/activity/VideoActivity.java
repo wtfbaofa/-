@@ -134,6 +134,7 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
     private List<String> mBroken;
     private History mHistory;
     private Players mPlayers;
+    private boolean background;
     private boolean fullscreen;
     private boolean initTrack;
     private boolean initAuto;
@@ -298,6 +299,7 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
         mR1 = this::hideControl;
         mR2 = this::setTraffic;
         mR3 = this::showEmpty;
+        setBackground(false);
         setRecyclerView();
         setVideoView();
         setDanmuView();
@@ -1115,6 +1117,7 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onActionEvent(ActionEvent event) {
+        if (isBackground()) return;
         if (ActionEvent.PLAY.equals(event.getAction()) || ActionEvent.PAUSE.equals(event.getAction())) {
             onKeyCenter();
         } else if (ActionEvent.NEXT.equals(event.getAction())) {
@@ -1128,6 +1131,7 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRefreshEvent(RefreshEvent event) {
+        if (isBackground()) return;
         if (event.getType() == RefreshEvent.Type.DETAIL) getDetail();
         else if (event.getType() == RefreshEvent.Type.PLAYER) onRefresh();
         else if (event.getType() == RefreshEvent.Type.DANMAKU) checkDanmu(event.getPath());
@@ -1136,6 +1140,7 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onPlayerEvent(PlayerEvent event) {
+        if (isBackground()) return;
         switch (event.getState()) {
             case 0:
                 setPosition();
@@ -1192,6 +1197,7 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onErrorEvent(ErrorEvent event) {
+		if (isBackground()) return;
         if (mPlayers.addRetry() > event.getRetry()) onError(event);
         else onRefresh();
     }
@@ -1325,6 +1331,14 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
     private void onPlay() {
         mPlayers.play();
         hideCenter();
+    }
+
+    public boolean isBackground() {
+        return background;
+    }
+
+    public void setBackground(boolean background) {
+        this.background = background;
     }
 
     private boolean isFullscreen() {
@@ -1513,6 +1527,7 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
     @Override
     protected void onResume() {
         super.onResume();
+        setBackground(false);
         mClock.start();
         onPlay();
     }
@@ -1520,6 +1535,7 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
     @Override
     protected void onPause() {
         super.onPause();
+        setBackground(true);
         onPaused(false);
         mClock.stop();
     }
